@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="sr-ME">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finansijski Panel - Herceg Novi</title>
+    <style>
+        :root {
+            --primary: #003366;
+            --bg: #f4f7f9;
+            --card-bg: #ffffff;
+            --text-dark: #2c3e50;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            background-color: var(--bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Gornja traka (Header) */
+        .header {
+            height: 90px;
+            background: var(--card-bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .header-titles h1 { 
+            margin: 0; 
+            color: var(--primary); 
+            font-size: 2rem; 
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        #clock { 
+            font-size: 1.3rem; 
+            font-weight: 700; 
+            color: var(--text-dark);
+            text-align: right;
+        }
+
+        /* Glavni kontejner sa 3 kolone */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1.4fr 1fr; /* Srednja kolona je šira */
+            gap: 25px;
+            padding: 25px;
+            flex-grow: 1;
+            box-sizing: border-box;
+        }
+
+        .column {
+            background: var(--card-bg);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid #e0e6ed;
+        }
+
+        .col-label {
+            background: var(--primary);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .widget-content {
+            flex-grow: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        /* Poseban stil za kolonu vremena */
+        .weather-inner {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        .market-info-box {
+            margin-top: auto;
+            padding: 20px;
+            border-radius: 15px;
+            background: #fdfdfd;
+            border: 1px solid #eee;
+            border-left: 6px solid var(--primary);
+        }
+
+        #market-status {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-titles">
+        <h1>Finansijski Monitoring</h1>
+        <div style="color: #7f8c8d; font-weight: 600;">Herceg Novi | Crna Gora</div>
+    </div>
+    <div id="clock">Učitavanje vremena...</div>
+</div>
+
+<div class="dashboard">
+    <div class="column">
+        <div class="col-label">Kursna Lista (Uživo)</div>
+        <div class="widget-content">
+            <div class="tradingview-widget-container">
+                <div class="tradingview-widget-container__widget"></div>
+                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
+                {
+                    "colorTheme": "light",
+                    "dateRange": "12M",
+                    "showChart": false,
+                    "locale": "sr",
+                    "width": "100%",
+                    "height": "100%",
+                    "isTransparent": true,
+                    "showSymbolLogo": true,
+                    "tabs": [{
+                        "title": "Valute",
+                        "symbols": [
+                            {"s": "FX:EURUSD", "d": "EUR / USD"},
+                            {"s": "FX:GBPUSD", "d": "GBP / USD"},
+                            {"s": "FX:USDJPY", "d": "USD / JPY"},
+                            {"s": "FX:USDCHF", "d": "USD / CHF"},
+                            {"s": "FX:AUDUSD", "d": "AUD / USD"},
+                            {"s": "FX:EURGBP", "d": "EUR / GBP"},
+                            {"s": "BITSTAMP:BTCUSD", "d": "Bitcoin / USD"},
+                            {"s": "BITSTAMP:ETHUSD", "d": "Ethereum / USD"}
+                        ]
+                    }]
+                }
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <div class="column">
+        <div class="col-label">Berza: S&P 500 & NASDAQ</div>
+        <div class="widget-content">
+            <div class="tradingview-widget-container">
+                <div class="tradingview-widget-container__widget"></div>
+                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
+                {
+                    "colorTheme": "light",
+                    "dateRange": "12M",
+                    "showChart": false,
+                    "locale": "sr",
+                    "width": "100%",
+                    "height": "100%",
+                    "isTransparent": true,
+                    "showSymbolLogo": true,
+                    "tabs": [{
+                        "title": "Vodeće Akcije",
+                        "symbols": [
+                            {"s": "NASDAQ:AAPL", "d": "Apple Inc."},
+                            {"s": "NASDAQ:NVDA", "d": "NVIDIA Corp."},
+                            {"s": "NASDAQ:MSFT", "d": "Microsoft"},
+                            {"s": "NASDAQ:AMZN", "d": "Amazon.com"},
+                            {"s": "NASDAQ:TSLA", "d": "Tesla, Inc."},
+                            {"s": "NASDAQ:META", "d": "Meta Platforms"},
+                            {"s": "NASDAQ:GOOGL", "d": "Alphabet Inc."},
+                            {"s": "NYSE:BRK.B", "d": "Berkshire Hathaway"},
+                            {"s": "NYSE:V", "d": "Visa Inc."},
+                            {"s": "NYSE:JPM", "d": "JPMorgan Chase"},
+                            {"s": "NYSE:WMT", "d": "Walmart"},
+                            {"s": "NYSE:MA", "d": "Mastercard"}
+                        ]
+                    }]
+                }
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <div class="column">
+        <div class="col-label">Prognoza: Herceg Novi</div>
+        <div class="weather-inner">
+            
+            <div id="weather-container" style="min-height: 250px;">
+                <a class="weatherwidget-io" 
+                   href="https://forecast7.com/sr/42d4518d54/herceg-novi/" 
+                   data-label_1="HERCEG NOVI" 
+                   data-label_2="Prognoza za naredne dane" 
+                   data-font="Roboto" 
+                   data-icons="Climacons Animated" 
+                   data-mode="Forecast" 
+                   data-theme="pure">
+                   Učitavanje vremenske prognoze...
+                </a>
+            </div>
+
+            <script>
+                !function(d,s,id){
+                    var js,fjs=d.getElementsByTagName(s)[0];
+                    if(!d.getElementById(id)){
+                        js=d.createElement(s);
+                        js.id=id;
+                        js.src='https://weatherwidget.io/js/widget.min.js';
+                        fjs.parentNode.insertBefore(js,fjs);
+                    }
+                }(document,'script','weatherwidget-io-js');
+            </script>
+            
+            <div class="market-info-box">
+                <div style="color: #7f8c8d; font-size: 0.9rem; margin-bottom: 5px; text-transform: uppercase;">Berza Status (SAD)</div>
+                <span id="market-status">Provjera...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Funkcija za sat i status tržišta
+    function updateDashboardInfo() {
+        const now = new Date();
+        
+        // Formatiranje sata za CG tržište
+        const clockOptions = { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric', 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit' 
+        };
+        document.getElementById('clock').innerText = now.toLocaleDateString('sr-ME', clockOptions);
+        
+        // Status Wall Street-a (Otvara u 15:30 po našem vremenu, zatvara u 22:00)
+        const hour = now.getHours();
+        const min = now.getMinutes();
+        const timeVal = hour + (min / 60);
+        const statusElement = document.getElementById('market-status');
+        const day = now.getDay(); // 0 je nedjelja, 6 je subota
+
+        if (day === 0 || day === 6) {
+            statusElement.innerHTML = "🔴 ZATVORENO (Vikend)";
+            statusElement.style.color = "#e74c3c";
+        } else if (timeVal >= 15.5 && timeVal < 22) {
+            statusElement.innerHTML = "🟢 OTVORENO (Uživo)";
+            statusElement.style.color = "#27ae60";
+        } else {
+            statusElement.innerHTML = "🔴 ZATVORENO (Van radnog vremena)";
+            statusElement.style.color = "#e74c3c";
+        }
+    }
+
+    // Pokreni odmah i osvježavaj svake sekunde
+    updateDashboardInfo();
+    setInterval(updateDashboardInfo, 1000);
+</script>
+
+</body>
+</html>
