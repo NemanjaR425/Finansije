@@ -2,278 +2,180 @@
 <html lang="sr-ME">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finansijski Panel - Herceg Novi</title>
+    <title>Final Market Monitor</title>
     <style>
         :root {
-            --primary: #003366;
-            --bg: #f4f7f9;
-            --card-bg: #ffffff;
-            --text-dark: #2c3e50;
+            --bg-dark: #121e31; --panel-bg: #1d2b41; --header-bg: #34495e;
+            --text-main: #ffffff; --up: #2ecc71; --down: #e74c3c;
         }
-
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-            background-color: var(--bg);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { width: 100%; height: 100%; background: #000; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+        #render-surface {
+            width: 1920px; height: 1080px; background-color: var(--bg-dark);
+            color: var(--text-main); position: absolute; top: 0; left: 0;
+            display: flex; flex-direction: column; padding: 30px; transform-origin: top left;
         }
-
-        /* Gornja traka (Header) */
-        .header {
-            height: 90px;
-            background: var(--card-bg);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 40px;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
-            z-index: 100;
-        }
-
-        .header-titles h1 { 
-            margin: 0; 
-            color: var(--primary); 
-            font-size: 2rem; 
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        #clock { 
-            font-size: 1.3rem; 
-            font-weight: 700; 
-            color: var(--text-dark);
-            text-align: right;
-        }
-
-        /* Glavni kontejner sa 3 kolone */
-        .dashboard {
-            display: grid;
-            grid-template-columns: 1fr 1.4fr 1fr; /* Srednja kolona je šira */
-            gap: 25px;
-            padding: 25px;
-            flex-grow: 1;
-            box-sizing: border-box;
-        }
-
-        .column {
-            background: var(--card-bg);
-            border-radius: 20px;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            overflow: hidden;
-            border: 1px solid #e0e6ed;
-        }
-
-        .col-label {
-            background: var(--primary);
-            color: white;
-            padding: 15px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-        }
-
-        .widget-content {
-            flex-grow: 1;
-            width: 100%;
-            height: 100%;
-            position: relative;
-        }
-
-        /* Poseban stil za kolonu vremena */
-        .weather-inner {
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            height: 100%;
-            box-sizing: border-box;
-        }
-
-        .market-info-box {
-            margin-top: auto;
-            padding: 20px;
-            border-radius: 15px;
-            background: #fdfdfd;
-            border: 1px solid #eee;
-            border-left: 6px solid var(--primary);
-        }
-
-        #market-status {
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
+        .header { height: 80px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .main-content { flex-grow: 1; display: grid; grid-template-columns: 480px 1fr 480px; gap: 25px; min-height: 0; }
+        .panel { background: var(--panel-bg); border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; }
+        .panel-header { height: 60px; background: var(--header-bg); display: flex; align-items: center; justify-content: center; font-weight: bold; text-transform: uppercase; font-size: 1rem; }
+        .market-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        .mini-row td { height: 80px; padding: 0 20px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+        .flex-cell { display: flex; align-items: center; gap: 15px; }
+        .market-icon { width: 42px; height: 42px; border-radius: 6px; object-fit: contain; background: transparent; }
+        .sym-container { display: flex; flex-direction: column; line-height: 1.2; }
+        .sym-short { font-size: 1.3rem; font-weight: 700; }
+        .sym-full { font-size: 0.85rem; color: rgba(255,255,255,0.5); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; }
+        .price-now { font-size: 1.7rem; font-weight: 700; font-family: monospace; }
     </style>
 </head>
 <body>
-
-<div class="header">
-    <div class="header-titles">
-        <h1>Finansijski Monitoring</h1>
-        <div style="color: #7f8c8d; font-weight: 600;">Herceg Novi | Crna Gora</div>
-    </div>
-    <div id="clock">Učitavanje vremena...</div>
-</div>
-
-<div class="dashboard">
-    <div class="column">
-        <div class="col-label">Kursna Lista (Uživo)</div>
-        <div class="widget-content">
-            <div class="tradingview-widget-container">
-                <div class="tradingview-widget-container__widget"></div>
-                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
-                {
-                    "colorTheme": "light",
-                    "dateRange": "12M",
-                    "showChart": false,
-                    "locale": "sr",
-                    "width": "100%",
-                    "height": "100%",
-                    "isTransparent": true,
-                    "showSymbolLogo": true,
-                    "tabs": [{
-                        "title": "Valute",
-                        "symbols": [
-                            {"s": "FX:EURUSD", "d": "EUR / USD"},
-                            {"s": "FX:GBPUSD", "d": "GBP / USD"},
-                            {"s": "FX:USDJPY", "d": "USD / JPY"},
-                            {"s": "FX:USDCHF", "d": "USD / CHF"},
-                            {"s": "FX:AUDUSD", "d": "AUD / USD"},
-                            {"s": "FX:EURGBP", "d": "EUR / GBP"},
-                            {"s": "BITSTAMP:BTCUSD", "d": "Bitcoin / USD"},
-                            {"s": "BITSTAMP:ETHUSD", "d": "Ethereum / USD"}
-                        ]
-                    }]
-                }
-                </script>
+    <div id="render-surface">
+        <div class="header">
+            <h1 style="font-size: 3.5rem;">LIVE MARKET WATCH</h1>
+            <div id="current-time" style="font-size: 2.8rem;">00:00:00</div>
+        </div>
+        <div class="main-content">
+            <div style="display: flex; flex-direction: column; gap: 25px;">
+                <div class="panel" style="height: calc(50% - 12.5px);"><div class="panel-header">Forex Rates</div><table class="market-table" id="fx-body"></table></div>
+                <div class="panel" style="height: calc(50% - 12.5px);"><div class="panel-header">Crypto Prices</div><table class="market-table" id="crypto-body"></table></div>
+            </div>
+            <div class="panel">
+                <div class="panel-header" id="stock-header">NYSE Most Active (1/3)</div>
+                <table class="market-table" id="stock-body"></table>
+            </div>
+            <div class="panel">
+                <div class="panel-header">Herceg Novi Weather</div>
+                <div id="weather-container" style="flex-grow:1; display:flex; align-items:center; justify-content:center; padding:20px;">
+                    <a class="weatherwidget-io" href="https://forecast7.com/sr/42d4518d54/herceg-novi/" 
+                       data-label_1="HERCEG NOVI" 
+                       data-label_2="MONTENEGRO" 
+                       data-font="Roboto" 
+                       data-icons="Climacons Animated" 
+                       data-theme="dark" 
+                       data-basecolor="#1d2b41" 
+                       data-accent="rgba(255, 255, 255, 0)" 
+                       data-textcolor="#ffffff" 
+                       style="width: 100%; display: block;">Učitavam prognozu...</a>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="column">
-        <div class="col-label">Berza: S&P 500 & NASDAQ</div>
-        <div class="widget-content">
-            <div class="tradingview-widget-container">
-                <div class="tradingview-widget-container__widget"></div>
-                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
-                {
-                    "colorTheme": "light",
-                    "dateRange": "12M",
-                    "showChart": false,
-                    "locale": "sr",
-                    "width": "100%",
-                    "height": "100%",
-                    "isTransparent": true,
-                    "showSymbolLogo": true,
-                    "tabs": [{
-                        "title": "Vodeće Akcije",
-                        "symbols": [
-                            {"s": "NASDAQ:AAPL", "d": "Apple Inc."},
-                            {"s": "NASDAQ:NVDA", "d": "NVIDIA Corp."},
-                            {"s": "NASDAQ:MSFT", "d": "Microsoft"},
-                            {"s": "NASDAQ:AMZN", "d": "Amazon.com"},
-                            {"s": "NASDAQ:TSLA", "d": "Tesla, Inc."},
-                            {"s": "NASDAQ:META", "d": "Meta Platforms"},
-                            {"s": "NASDAQ:GOOGL", "d": "Alphabet Inc."},
-                            {"s": "NYSE:BRK.B", "d": "Berkshire Hathaway"},
-                            {"s": "NYSE:V", "d": "Visa Inc."},
-                            {"s": "NYSE:JPM", "d": "JPMorgan Chase"},
-                            {"s": "NYSE:WMT", "d": "Walmart"},
-                            {"s": "NYSE:MA", "d": "Mastercard"}
-                        ]
-                    }]
-                }
-                </script>
-            </div>
-        </div>
-    </div>
-
-    <div class="column">
-        <div class="col-label">Prognoza: Herceg Novi</div>
-        <div class="weather-inner">
-            
-            <div id="weather-container" style="min-height: 250px;">
-                <a class="weatherwidget-io" 
-                   href="https://forecast7.com/sr/42d4518d54/herceg-novi/" 
-                   data-label_1="HERCEG NOVI" 
-                   data-label_2="Prognoza za naredne dane" 
-                   data-font="Roboto" 
-                   data-icons="Climacons Animated" 
-                   data-mode="Forecast" 
-                   data-theme="pure">
-                   Učitavanje vremenske prognoze...
-                </a>
-            </div>
-
-            <script>
-                !function(d,s,id){
-                    var js,fjs=d.getElementsByTagName(s)[0];
-                    if(!d.getElementById(id)){
-                        js=d.createElement(s);
-                        js.id=id;
-                        js.src='https://weatherwidget.io/js/widget.min.js';
-                        fjs.parentNode.insertBefore(js,fjs);
-                    }
-                }(document,'script','weatherwidget-io-js');
-            </script>
-            
-            <div class="market-info-box">
-                <div style="color: #7f8c8d; font-size: 0.9rem; margin-bottom: 5px; text-transform: uppercase;">Berza Status (SAD)</div>
-                <span id="market-status">Provjera...</span>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    // Funkcija za sat i status tržišta
-    function updateDashboardInfo() {
-        const now = new Date();
-        
-        // Formatiranje sata za CG tržište
-        const clockOptions = { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric', 
-            hour: '2-digit', 
-            minute: '2-digit', 
-            second: '2-digit' 
+    <script>
+        const API_KEY = 'd75qlb9r01qk56kdov40d75qlb9r01qk56kdov4g';
+        const companyNames = {
+            'AAPL':'Apple Inc.', 'NVDA':'NVIDIA Corporation', 'TSLA':'Tesla, Inc.', 'MSFT':'Microsoft Corp.', 
+            'AMZN':'Amazon.com, Inc.', 'META':'Meta Platforms, Inc.', 'GOOGL':'Alphabet Inc.', 'AMD':'Adv. Micro Devices', 
+            'NFLX':'Netflix, Inc.', 'TSM':'Taiwan Semi.', 'V':'Visa Inc.', 'WMT':'Walmart Inc.', 
+            'MA':'Mastercard Inc.', 'AVGO':'Broadcom Inc.', 'PG':'Procter & Gamble', 'ORCL':'Oracle Corporation', 
+            'COST':'Costco Wholesale', 'ADBE':'Adobe Inc.', 'HD':'Home Depot Inc.', 'BAC':'Bank of America', 
+            'CVX':'Chevron Corp.', 'LLY':'Eli Lilly & Co.', 'ABBV':'AbbVie Inc.', 'KO':'Coca-Cola Co.', 
+            'PEP':'PepsiCo, Inc.', 'CRM':'Salesforce, Inc.', 'T':'AT&T Inc.', 'INTC':'Intel Corporation', 
+            'DIS':'Disney Co.', 'PYPL':'PayPal Holdings'
         };
-        document.getElementById('clock').innerText = now.toLocaleDateString('sr-ME', clockOptions);
-        
-        // Status Wall Street-a (Otvara u 15:30 po našem vremenu, zatvara u 22:00)
-        const hour = now.getHours();
-        const min = now.getMinutes();
-        const timeVal = hour + (min / 60);
-        const statusElement = document.getElementById('market-status');
-        const day = now.getDay(); // 0 je nedjelja, 6 je subota
+        const tickers = Object.keys(companyNames);
+        let stockPrices = {};
+        let currentSlide = 0;
 
-        if (day === 0 || day === 6) {
-            statusElement.innerHTML = "🔴 ZATVORENO (Vikend)";
-            statusElement.style.color = "#e74c3c";
-        } else if (timeVal >= 15.5 && timeVal < 22) {
-            statusElement.innerHTML = "🟢 OTVORENO (Uživo)";
-            statusElement.style.color = "#27ae60";
-        } else {
-            statusElement.innerHTML = "🔴 ZATVORENO (Van radnog vremena)";
-            statusElement.style.color = "#e74c3c";
+        // Weather Fix: Forsirano učitavanje skripte
+        function loadWeather() {
+            if (typeof __weatherwidget_init === 'function') {
+                __weatherwidget_init();
+            } else {
+                const script = document.createElement('script');
+                script.id = 'weatherwidget-io-js';
+                script.src = 'https://weatherwidget.io/js/widget.min.js';
+                document.body.appendChild(script);
+            }
         }
-    }
 
-    // Pokreni odmah i osvježavaj svake sekunde
-    updateDashboardInfo();
-    setInterval(updateDashboardInfo, 1000);
-</script>
+        function handleErr(img, s) {
+            img.onerror = null;
+            img.src = `https://ui-avatars.com/api/?name=${s}&background=34495e&color=fff&bold=true`;
+        }
 
+        function buildRow(s, p, c, iconUrl, fullName = "") {
+            const color = parseFloat(c) >= 0 ? 'var(--up)' : 'var(--down)';
+            return `<tr class="mini-row">
+                <td><div class="flex-cell">
+                    <img class="market-icon" src="${iconUrl}" onerror="handleErr(this, '${s}')">
+                    <div class="sym-container">
+                        <span class="sym-short">${s}</span>
+                        ${fullName ? `<span class="sym-full">${fullName}</span>` : ''}
+                    </div>
+                </div></td>
+                <td style="text-align:right">
+                    <span class="price-now">${p}</span><br>
+                    <span style="color:${color};font-weight:600">${parseFloat(c)>=0?'+':''}${c}%</span>
+                </td>
+            </tr>`;
+        }
+
+        async function updateStocks() {
+            for (let s of tickers) {
+                try {
+                    const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${s}&token=${API_KEY}`);
+                    const d = await res.json();
+                    if (d.c) stockPrices[s] = { p: d.c.toFixed(2), c: d.dp.toFixed(2) };
+                } catch(e) {}
+            }
+            renderSlide();
+        }
+
+        function renderSlide() {
+            const container = document.getElementById('stock-body');
+            const start = currentSlide * 10;
+            const slice = tickers.slice(start, start + 10);
+            container.innerHTML = slice.map(s => {
+                const data = stockPrices[s] || {p: '---', c: '0.00'};
+                return buildRow(s, data.p, data.c, `https://financialmodelingprep.com/image-stock/${s}.png`, companyNames[s]);
+            }).join('');
+            document.getElementById('stock-header').innerText = `NYSE Most Active (${currentSlide + 1}/3)`;
+            currentSlide = (currentSlide + 1) % 3;
+        }
+
+        async function updateCrypto() {
+            const names = {'BTC':'Bitcoin', 'ETH':'Ethereum', 'SOL':'Solana', 'ADA':'Cardano'};
+            try {
+                const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","SOLUSDT","ADAUSDT"]');
+                const data = await res.json();
+                document.getElementById('crypto-body').innerHTML = data.map(c => {
+                    const sym = c.symbol.replace('USDT','');
+                    return buildRow(sym, parseFloat(c.lastPrice).toLocaleString(), parseFloat(c.priceChangePercent).toFixed(2), 
+                    `https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${sym.toLowerCase()}.png`, names[sym]);
+                }).join('');
+            } catch(e) {}
+        }
+
+        async function updateForex() {
+            const names = {'EURUSD':'Euro / US Dollar', 'GBPUSD':'British Pound', 'USDJPY':'US Dollar / Yen', 'USDCHF':'US Dollar / Franc'};
+            try {
+                const res = await fetch('https://open.er-api.com/v6/latest/USD');
+                const data = await res.json();
+                const pairs = [
+                    {s:"EURUSD", p:(1/data.rates.EUR).toFixed(4), i:"eu"},
+                    {s:"GBPUSD", p:(1/data.rates.GBP).toFixed(4), i:"gb"},
+                    {s:"USDJPY", p:data.rates.JPY.toFixed(2), i:"us"},
+                    {s:"USDCHF", p:data.rates.CHF.toFixed(4), i:"ch"}
+                ];
+                document.getElementById('fx-body').innerHTML = pairs.map(f => buildRow(f.s, f.p, "0.02", `https://flagcdn.com/w80/${f.i}.png`, names[f.s])).join('');
+            } catch(e) {}
+        }
+
+        // Inicijalizacija
+        updateStocks(); updateCrypto(); updateForex(); loadWeather();
+        
+        setInterval(updateStocks, 60000);
+        setInterval(renderSlide, 10000);
+        setInterval(updateCrypto, 5000);
+        setInterval(() => { document.getElementById('current-time').innerText = new Date().toLocaleTimeString('sr-ME'); }, 1000);
+
+        function autoScale() { 
+            const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080); 
+            document.getElementById('render-surface').style.transform = `scale(${scale})`; 
+        }
+        window.addEventListener('resize', autoScale); autoScale();
+    </script>
 </body>
 </html>
