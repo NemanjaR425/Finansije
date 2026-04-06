@@ -2,17 +2,24 @@
 <html lang="sr-ME">
 <head>
     <meta charset="UTF-8">
-    <title>Birius Premium Terminal - Weather Fix</title>
+    <title>Birius Premium Terminal - Crnogorska Verzija</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --bg-dark: #121e31; --panel-bg: #1d2b41; --header-bg: #34495e;
-            --text-main: #ffffff; --up: #2ecc71; --down: #ff4d4d; --accent: #81D4FA;
+            --bg-dark: #121e31; 
+            --panel-bg: #1d2b41; 
+            --header-bg: #34495e;
+            --text-main: #ffffff; 
+            --up: #2ecc71; 
+            --down: #ff4d4d; 
+            --accent: #81D4FA;
         }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        
         html, body { 
             width: 100%; height: 100%; background: #000; overflow: hidden; 
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', Roboto, sans-serif;
         }
         
         #render-surface {
@@ -26,79 +33,96 @@
             left: 50%; top: 50%;
         }
 
+        /* --- HEADER --- */
+        .header { height: 90px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .header-logo { height: 75px; width: auto; object-fit: contain; margin-left: 60px; }
+        
+        .clock-section { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+        .clock-row { display: flex; align-items: center; gap: 15px; font-size: 3.5rem; font-weight: 300; }
+        #current-date { font-size: 1.1rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; }
+
+        /* --- LAYOUT --- */
+        .main-content { 
+            flex: 1; 
+            display: grid; 
+            grid-template-columns: 530px 450px 1fr; 
+            gap: 25px; 
+            min-height: 0; 
+            padding-bottom: 10px; 
+        }
+        .left-col, .center-col, .right-col { display: flex; flex-direction: column; gap: 25px; }
+        
+        .panel { 
+            background: var(--panel-bg); 
+            border-radius: 12px; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 0; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
+        }
+        
+        .panel-header { 
+            height: 52px; background: var(--header-bg); 
+            display: flex; align-items: center; justify-content: center; 
+            font-weight: bold; text-transform: uppercase; font-size: 1rem; letter-spacing: 1.5px; flex-shrink: 0;
+        }
+        
+        /* --- DASHED LINE --- */
+        .row-item { 
+            display: flex; align-items: center; 
+            padding: 0 20px; height: 72px; border-bottom: 3px solid rgba(255,255,255,0.03); 
+        }
+
+        .item-info { display: flex; align-items: center; flex-shrink: 0; }
+        
+        .dash-spacer { 
+            flex-grow: 1; 
+            margin: 0 35px; 
+            border-bottom: 2px dashed rgba(255,255,255,0.15); 
+            height: 10px;
+        }
+
+        .item-values { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
+
+        .sym-container { line-height: 1.2; }
+        .price-now { font-size: 1.5rem; font-family: 'Consolas', monospace; color: #eee; }
+        .change-percent { font-size: 1.1rem; font-weight: 600; min-width: 80px; text-align: right; }
+
+        /* --- FLAGS --- */
+        .icon-pair { position: relative; width: 65px; height: 40px; margin-right: 12px; }
+        .flag { 
+            width: 30px; height: 30px; border-radius: 50%; position: absolute; 
+            border: 2px solid var(--panel-bg); object-fit: cover;
+            transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .pos-primary { top: 0; left: 20px; z-index: 2; opacity: 1; transform: scale(1); }
+        .pos-secondary { bottom: 0; left: 0; z-index: 1; opacity: 0.5; transform: scale(0.85); }
+
+        /* --- WEATHER & NEWS --- */
+        .weather-container { flex-shrink: 0; height: 320px; transition: background 1.5s ease; }
+        .weather-content-layout { flex: 1; display: flex; align-items: center; justify-content: space-evenly; padding: 0 30px; }
+        #w-temp { font-size: 6.5rem; font-weight: 200; line-height: 1; }
+        #w-desc { font-size: 1.8rem; text-transform: capitalize; margin-top: 5px; opacity: 0.9; }
+
+        .news-wrap { flex: 1; padding: 25px 35px; overflow: hidden; display: flex; flex-direction: column; gap: 20px; }
+        .news-item { border-left: 4px solid var(--accent); padding-left: 20px; }
+        .news-title { font-size: 1.35rem; line-height: 1.4; font-weight: 400; color: #fff; }
+
         @keyframes text-flash-green { 0% { color: var(--up); } 100% { color: #eee; } }
         @keyframes text-flash-red { 0% { color: var(--down); } 100% { color: #eee; } }
         .text-up { animation: text-flash-green 1.5s ease-out; }
         .text-down { animation: text-flash-red 1.5s ease-out; }
-
-        .header { height: 90px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .header-logo { height: 70px; width: auto; object-fit: contain; margin-left: 20px; }
-        
-        .clock-section { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-        .clock-row { display: flex; align-items: center; gap: 12px; font-size: 3.2rem; font-weight: 500; }
-        #current-date { font-size: 1.1rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; }
-
-        .main-content { flex: 1; display: grid; grid-template-columns: 550px 1fr 520px; gap: 25px; min-height: 0; padding-bottom: 10px; }
-        .left-col, .center-col, .right-col { display: flex; flex-direction: column; gap: 25px; }
-        
-        .panel { background: var(--panel-bg); border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; min-height: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-        .panel-header { 
-            height: 52px; background: var(--header-bg); 
-            display: flex; align-items: center; justify-content: center; 
-            font-weight: bold; text-transform: uppercase; font-size: 1rem; 
-            letter-spacing: 1.5px; flex-shrink: 0;
-        }
-        
-        .market-list { flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 5px 0; }
-        .row-item { display: flex; align-items: center; justify-content: space-between; padding: 0 25px; height: 72px; border-bottom: 1px solid rgba(255,255,255,0.03); }
-        
-        .icon-pair { position: relative; width: 70px; height: 45px; margin-right: 15px; flex-shrink: 0; }
-        .flag { 
-            width: 34px; height: 34px; border-radius: 50%; position: absolute; 
-            border: 2px solid var(--panel-bg); object-fit: cover;
-            transition: all 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55); 
-        }
-        .pos-primary { top: 0; left: 22px; z-index: 2; transform: scale(1); opacity: 1; }
-        .pos-secondary { bottom: 0; left: 0; z-index: 1; transform: scale(0.85); opacity: 0.6; }
-
-        .sym-container { display: flex; flex-direction: column; line-height: 1.1; }
-        .sym-short { font-size: 1.35rem; font-weight: 600; color: #fff; }
-        .sym-full { font-size: 0.8rem; color: rgba(255,255,255,0.4); }
-        
-        .price-now { font-size: 1.6rem; font-weight: 400; font-family: 'Consolas', monospace; color: #eee; }
-        .change-percent { font-size: 1.1rem; font-weight: 600; text-align: right; min-width: 80px; }
-
-        .weather-container { flex-shrink: 0; height: 320px; transition: background 1s ease; }
-        .weather-info { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        /* Stil za nove weather ikone */
-.weather-icon-container {
-    font-size: 80px;
-    width: 110px;
-    height: 110px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    filter: drop-shadow(0 0 15px rgba(255,255,255,0.2));
-}
-.sun-color { color: #FFD700; filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.4)); }
-.moon-color { color: #F0F8FF; filter: drop-shadow(0 0 20px rgba(240, 248, 255, 0.4)); }
-.cloud-color { color: #ecf0f1; }
-.rain-color { color: #3498db; }
-        #w-temp { font-size: 5rem; font-weight: 800; letter-spacing: -2px; }
-
-        #w-desc { font-size: 1.4rem; color: #fff; text-transform: capitalize; margin-top: -10px; }
-
-        .news-wrap { flex: 1; padding: 20px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; }
-        .news-item { border-left: 3px solid var(--accent); padding-left: 15px; margin-bottom: 12px; }
     </style>
 </head>
 <body>
+
     <div id="render-surface">
         <div class="header">
             <img src="https://i.postimg.cc/FKXm9dFP/Birius-Svijetli-2x-8.png" class="header-logo">
             <div class="clock-section">
                 <div class="clock-row">
-                    <i class="fa-regular fa-clock" style="font-size: 2.2rem; opacity: 0.6;"></i>
+                    <i class="fa-regular fa-clock" style="font-size: 2.2rem; opacity: 0.5;"></i>
                     <div id="current-time">00:00</div>
                 </div>
                 <div id="current-date">--. --. ----.</div>
@@ -107,8 +131,8 @@
 
         <div class="main-content">
             <div class="left-col">
-                <div class="panel" style="flex: 1;">
-                    <div class="panel-header" id="fx-header">Forex</div>
+                <div class="panel" style="flex: 1.2;">
+                    <div class="panel-header" id="fx-header">Kursna Lista - Kupovni</div>
                     <div class="market-list" id="fx-list"></div>
                 </div>
                 <div class="panel" style="flex: 1;">
@@ -119,28 +143,28 @@
 
             <div class="center-col">
                 <div class="panel" style="flex: 1;">
-                    <div class="panel-header" id="stock-header">NYSE Berza (1/3)</div>
+                    <div class="panel-header" id="stock-header">NYSE Najaktivnije Akcije (1/2)</div>
                     <div class="market-list" id="stock-list"></div>
                 </div>
             </div>
 
             <div class="right-col">
                 <div class="panel weather-container" id="weather-panel">
-                    <div class="panel-header">Vremenska Prognoza</div>
-                    <div class="weather-info">
-                        <div style="display: flex; align-items: center; gap: 5px;">
-                            <img id="w-icon" style="width: 110px;">
+                    <div class="panel-header">Vremenska Prognoza - Herceg Novi</div>
+                    <div class="weather-content-layout">
+                        <div id="w-icon-container"></div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
                             <div id="w-temp">--°C</div>
+                            <div id="w-desc">Učitavanje...</div>
                         </div>
-                        <div id="w-desc">Učitavanje...</div>
-                        <div style="display: flex; gap: 20px; margin-top: 15px; opacity: 0.7; font-size: 0.95rem;">
+                        <div style="display: flex; flex-direction: column; gap: 15px; opacity: 0.7; font-size: 1.1rem;">
                             <span>Vlažnost: <b id="w-hum">--%</b></span>
                             <span>Vjetar: <b id="w-wind">-- km/h</b></span>
                         </div>
                     </div>
                 </div>
                 <div class="panel" style="flex: 1;">
-                    <div class="panel-header">Investitor.me</div>
+                    <div class="panel-header">Investitor.me Vijesti</div>
                     <div class="news-wrap" id="news-container"></div>
                 </div>
             </div>
@@ -156,15 +180,16 @@
         let isFxBuyingPage = true;
         let currentStockSlide = 0;
 
-        let fxData = [
-            {id:"USD", s:"EUR/USD", m:"us", b:"eu", f:"Euro / U.S. Dollar", mid:1.08, spread:0.005},
-            {id:"GBP", s:"EUR/GBP", m:"gb", b:"eu", f:"Euro / British Pound", mid:0.85, spread:0.003},
-            {id:"RUB", s:"EUR/RUB", m:"ru", b:"eu", f:"Euro / Russian Ruble", mid:98.5, spread:1.5},
-            {id:"TRY", s:"EUR/TRY", m:"tr", b:"eu", f:"Euro / Turkish Lira", mid:34.2, spread:0.4},
-            {id:"CHF", s:"EUR/CHF", m:"ch", b:"eu", f:"Euro / Swiss Franc", mid:0.96, spread:0.004}
+        const fxData = [
+            {id:"USD", s:"EUR/USD", m:"us", b:"eu", f:"Euro / Američki Dolar", mid:1.0825, spread:0.005},
+            {id:"GBP", s:"EUR/GBP", m:"gb", b:"eu", f:"Euro / Britanska Funta", mid:0.8515, spread:0.003},
+            {id:"RUB", s:"EUR/RUB", m:"ru", b:"eu", f:"Euro / Ruska Rublja", mid:99.25, spread:1.5},
+            {id:"TRY", s:"EUR/TRY", m:"tr", b:"eu", f:"Euro / Turska Lira", mid:34.40, spread:0.4},
+            {id:"CHF", s:"EUR/CHF", m:"ch", b:"eu", f:"Euro / Švajcarski Franak", mid:0.9620, spread:0.004}
         ];
 
-        const companyNames = {'AAPL':'Apple Inc.', 'NVDA':'NVIDIA Corp.', 'TSLA':'Tesla, Inc.', 'MSFT':'Microsoft Corp.', 'AMZN':'Amazon.com', 'META':'Meta Platforms', 'GOOGL':'Alphabet Inc.', 'AMD':'Adv. Micro Devices', 'NFLX':'Netflix, Inc.', 'TSM':'Taiwan Semi.', 'V':'Visa Inc.', 'WMT':'Walmart Inc.', 'MA':'Mastercard Inc.', 'AVGO':'Broadcom Inc.', 'PG':'Procter & Gamble', 'ORCL':'Oracle Corp.', 'COST':'Costco Wholesale', 'ADBE':'Adobe Inc.', 'HD':'Home Depot Inc.', 'BAC':'Bank of America', 'CVX':'Chevron Corp.', 'LLY':'Eli Lilly & Co.', 'ABBV':'AbbVie Inc.', 'KO':'Coca-Cola Co.', 'PEP':'PepsiCo, Inc.', 'CRM':'Salesforce, Inc.', 'T':'AT&T Inc.', 'INTC':'Intel Corp.', 'DIS':'Disney Co.', 'PYPL':'PayPal Holdings'};
+        // Mapiranje imena kompanija na crnogorski/lokalizovani format gdje je potrebno
+        const companyNames = {'AAPL':'Apple Inc.', 'NVDA':'NVIDIA Corp.', 'TSLA':'Tesla, Inc.', 'MSFT':'Microsoft Corp.', 'AMZN':'Amazon.com', 'META':'Meta Platforms', 'GOOGL':'Alphabet Inc.', 'AMD':'Adv. Micro Devices', 'NFLX':'Netflix, Inc.', 'TSM':'Taiwan Semi.', 'V':'Visa Inc.', 'WMT':'Walmart Inc.', 'MA':'Mastercard Inc.', 'AVGO':'Broadcom Inc.', 'PG':'Procter & Gamble', 'ORCL':'Oracle Corp.', 'COST':'Costco Wholesale', 'ADBE':'Adobe Inc.', 'HD':'Home Depot Inc.', 'BAC':'Bank of America'};
         const tickers = Object.keys(companyNames);
 
         function triggerTextFlash(id, currentPrice) {
@@ -179,104 +204,181 @@
             prevValues[id] = currentPrice;
         }
 
+        async function updateWeather() {
+            try {
+                const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=Herceg Novi,ME&units=metric&lang=sr&appid=${WEATHER_KEY}`);
+                const d = await res.json();
+                if(d.main) {
+                    document.getElementById('w-temp').innerText = Math.round(d.main.temp) + "°C";
+                    // Prevod opisa vremena na crnogorski
+                    let desc = d.weather[0].description;
+                    if(desc === "clear sky") desc = "Vedro";
+                    if(desc === "few clouds") desc = "Malo oblačno";
+                    if(desc === "scattered clouds") desc = "Djelimično oblačno";
+                    if(desc === "broken clouds") desc = "Pretežno oblačno";
+                    if(desc === "overcast clouds") desc = "Oblačno";
+                    if(desc === "light rain") desc = "Slabija kiša";
+                    if(desc === "moderate rain") desc = "Kiša";
+                    
+                    document.getElementById('w-desc').innerText = desc;
+                    document.getElementById('w-hum').innerText = d.main.humidity + "%";
+                    document.getElementById('w-wind').innerText = Math.round(d.wind.speed * 3.6) + " km/h";
+                    
+                    const container = document.getElementById('w-icon-container');
+                    const isNight = d.weather[0].icon.includes('n');
+                    const id = d.weather[0].id;
+                    let iconHtml = (id === 800) 
+                        ? (isNight ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="weather-svg moon-icon" style="width:130px; height:130px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>` : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="weather-svg sun-icon" style="width:130px; height:130px;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`)
+                        : `<i class="fa-solid fa-cloud" style="font-size: 100px; color: #ecf0f1;"></i>`;
+
+                    container.innerHTML = `<div style="animation: sun-pulse 4s infinite ease-in-out;">${iconHtml}</div>`;
+                    document.getElementById('weather-panel').style.background = id === 800 ? (isNight ? "linear-gradient(135deg, #0f2027 0%, #203a43 100%)" : "linear-gradient(135deg, #2980b9 0%, #6dd5fa 100%)") : "linear-gradient(135deg, #34495e 0%, #7f8c8d 100%)";
+                }
+            } catch(e){}
+        }
+
         function initForex() {
-            const list = document.getElementById('fx-list');
-            list.innerHTML = fxData.map(x => `
+            document.getElementById('fx-list').innerHTML = fxData.map(x => `
                 <div class="row-item">
-                    <div style="display:flex; align-items:center;">
+                    <div class="item-info">
                         <div class="icon-pair">
                             <img id="flag-${x.id}-main" class="flag pos-primary" src="https://flagcdn.com/w80/${x.m}.png">
                             <img id="flag-${x.id}-base" class="flag pos-secondary" src="https://flagcdn.com/w80/${x.b}.png">
                         </div>
-                        <div class="sym-container"><span class="sym-short">${x.s}</span><span class="sym-full">${x.f}</span></div>
+                        <div class="sym-container">
+                            <span style="font-size:1.4rem; font-weight:600;">${x.s}</span><br>
+                            <span style="font-size:0.8rem; opacity:0.4;">${x.f}</span>
+                        </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:25px;">
+                    <div class="dash-spacer"></div>
+                    <div class="item-values">
                         <span class="price-now" id="price-fx-${x.id}">0.0000</span>
-                        <span class="change-percent" id="pct-fx-${x.id}">0.05%</span>
+                        <span class="change-percent" id="pct-fx-${x.id}">+0.05%</span>
                     </div>
                 </div>
             `).join('');
         }
 
         function renderFx() {
-            const header = document.getElementById('fx-header');
-            header.innerText = isFxBuyingPage ? "Forex" : "Forex";
+            isFxBuyingPage = !isFxBuyingPage;
+            document.getElementById('fx-header').innerText = isFxBuyingPage ? "Kursna Lista - Kupovni" : "Kursna Lista - Prodajni";
             fxData.forEach(x => {
                 const price = isFxBuyingPage ? (x.mid - x.spread/2) : (x.mid + x.spread/2);
                 document.getElementById(`price-fx-${x.id}`).innerText = x.id === 'RUB' ? price.toFixed(2) : price.toFixed(4);
                 const pctEl = document.getElementById(`pct-fx-${x.id}`);
                 pctEl.style.color = isFxBuyingPage ? 'var(--down)' : 'var(--up)';
                 pctEl.innerText = (isFxBuyingPage ? '-' : '+') + "0.05%";
-                const fMain = document.getElementById(`flag-${x.id}-main`);
-                const fBase = document.getElementById(`flag-${x.id}-base`);
-                fMain.className = isFxBuyingPage ? "flag pos-primary" : "flag pos-secondary";
-                fBase.className = isFxBuyingPage ? "flag pos-secondary" : "flag pos-primary";
+                document.getElementById(`flag-${x.id}-main`).className = isFxBuyingPage ? "flag pos-primary" : "flag pos-secondary";
+                document.getElementById(`flag-${x.id}-base`).className = isFxBuyingPage ? "flag pos-secondary" : "flag pos-primary";
             });
         }
 
-        async function updateFxRates() { try { const res = await fetch('https://open.er-api.com/v6/latest/EUR'); const d = await res.json(); fxData.forEach(x => { if(d.rates[x.id]) x.mid = d.rates[x.id]; }); renderFx(); } catch(e){} }
-        async function updateCrypto() { try { const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","SOLUSDT","ADAUSDT"]'); const d = await res.json(); document.getElementById('crypto-list').innerHTML = d.map(c => { const sym = c.symbol.replace('USDT',''); const p = parseFloat(c.lastPrice); setTimeout(() => triggerTextFlash(`cry-${sym}`, p), 50); return `<div class="row-item"><div style="display:flex; align-items:center;"><img src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${sym.toLowerCase()}.png" style="width:36px; margin-right:15px;"><div class="sym-container"><span class="sym-short">${sym}</span><span class="sym-full">${sym} / USDT</span></div></div><div style="display:flex; align-items:center; gap:25px;"><span class="price-now" id="price-cry-${sym}">${p.toLocaleString(undefined, {minimumFractionDigits:2})}</span><span class="change-percent" style="color:${parseFloat(c.priceChangePercent)>=0?'var(--up)':'var(--down)'}">${parseFloat(c.priceChangePercent).toFixed(2)}%</span></div></div>`; }).join(''); } catch(e){} }
-        async function updateStocks() { for (let s of tickers) { try { const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${s}&token=${FINNHUB_KEY}`); const d = await res.json(); if (d.c) stockPrices[s] = { p: d.c.toFixed(2), c: d.dp.toFixed(2) }; } catch(e){} } renderStockSlide(); }
-        function renderStockSlide() { const slice = tickers.slice(currentStockSlide * 10, (currentStockSlide * 10) + 10); document.getElementById('stock-list').innerHTML = slice.map(s => { const d = stockPrices[s] || {p: '---', c: '0.00'}; setTimeout(() => triggerTextFlash(`stk-${s}`, parseFloat(d.p)), 50); return `<div class="row-item"><div style="display:flex; align-items:center;"><img src="https://financialmodelingprep.com/image-stock/${s}.png" style="width:34px; height:34px; border-radius:6px; margin-right:15px;" onerror="this.src='https://ui-avatars.com/api/?name=${s}&background=34495e&color=fff'"><div class="sym-container"><span class="sym-short">${s}</span><span class="sym-full">${companyNames[s]}</span></div></div><div style="display:flex; align-items:center; gap:25px;"><span class="price-now" id="price-stk-${s}">${d.p}</span><span class="change-percent" style="color:${parseFloat(d.c)>=0?'var(--up)':'var(--down)'}">${parseFloat(d.c)>=0?'+':''}${d.c}%</span></div></div>`; }).join(''); document.getElementById('stock-header').innerText = `NYSE Most Active (${currentStockSlide + 1}/3)`; currentStockSlide = (currentStockSlide + 1) % 3; }
-
-        async function updateWeather() {
-    try {
-        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=Herceg Novi,ME&units=metric&lang=sr&appid=${WEATHER_KEY}`);
-        const d = await res.json();
-        if(d.main) {
-            document.getElementById('w-temp').innerText = Math.round(d.main.temp) + "°C";
-            document.getElementById('w-desc').innerText = d.weather[0].description;
-            document.getElementById('w-hum').innerText = d.main.humidity + "%";
-            document.getElementById('w-wind').innerText = Math.round(d.wind.speed * 3.6) + " km/h";
-            
-            const iconElement = document.getElementById('w-icon');
-            const id = d.weather[0].id;
-            const isNight = d.weather[0].icon.includes('n');
-            let iconClass = "";
-            let colorClass = "";
-
-            // Logika za izbor ikone
-            if (id === 800) { // Clear sky
-                iconClass = isNight ? "fa-moon" : "fa-sun";
-                colorClass = isNight ? "moon-color" : "sun-color";
-            } else if (id === 801 || id === 802) { // Few clouds
-                iconClass = isNight ? "fa-cloud-moon" : "fa-cloud-sun";
-                colorClass = "cloud-color";
-            } else if (id > 802) { // Cloudy
-                iconClass = "fa-cloud";
-                colorClass = "cloud-color";
-            } else if (id >= 500 && id < 600) { // Rain
-                iconClass = "fa-cloud-showers-heavy";
-                colorClass = "rain-color";
-            } else if (id >= 200 && id < 300) { // Thunder
-                iconClass = "fa-bolt-lightning";
-                colorClass = "sun-color";
-            } else {
-                iconClass = "fa-cloud";
-                colorClass = "cloud-color";
-            }
-
-            // Umjesto <img>, sada koristimo <i> tag za FontAwesome
-            iconElement.outerHTML = `<div id="w-icon" class="weather-icon-container ${colorClass}"><i class="fa-solid ${iconClass}"></i></div>`;
-
-            // Pozadina panela (ostaje ista logika)
-            const panel = document.getElementById('weather-panel');
-            let bg = "var(--panel-bg)";
-            if (id === 800) bg = isNight ? "linear-gradient(135deg, #0f2027 0%, #203a43 100%)" : "linear-gradient(135deg, #2980b9 0%, #6dd5fa 100%)";
-            else if (id > 800) bg = "linear-gradient(135deg, #34495e 0%, #7f8c8d 100%)";
-            else if (id < 600) bg = "linear-gradient(135deg, #2c3e50 0%, #3498db 100%)";
-            panel.style.background = bg;
+        async function updateCrypto() {
+            try {
+                const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","SOLUSDT","ADAUSDT"]');
+                const d = await res.json();
+                document.getElementById('crypto-list').innerHTML = d.map(c => {
+                    const sym = c.symbol.replace('USDT','');
+                    const p = parseFloat(c.lastPrice);
+                    setTimeout(() => triggerTextFlash(`cry-${sym}`, p), 50);
+                    return `<div class="row-item">
+                        <div class="item-info">
+                            <img src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${sym.toLowerCase()}.png" style="width:38px; margin-right:15px;">
+                            <div class="sym-container">
+                                <span style="font-size:1.4rem; font-weight:600;">${sym}</span><br>
+                                <span style="font-size:0.8rem; opacity:0.4;">${sym} / USDT</span>
+                            </div>
+                        </div>
+                        <div class="dash-spacer"></div>
+                        <div class="item-values">
+                            <span class="price-now" id="price-cry-${sym}">${p.toLocaleString(undefined, {minimumFractionDigits:2})}</span>
+                            <span class="change-percent" style="color:${parseFloat(c.priceChangePercent)>=0?'var(--up)':'var(--down)'}">${parseFloat(c.priceChangePercent).toFixed(2)}%</span>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch(e){}
         }
-    } catch(e){ console.error("Weather error:", e); }
-}
-        async function updateNews() { try { const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Finvestitor.me%2Ffeed%2F`); const data = await res.json(); if (data.status === 'ok') { document.getElementById('news-container').innerHTML = data.items.slice(0, 5).map(item => `<div class="news-item"><div class="news-title">${item.title}</div><div style="font-size:0.75rem; opacity:0.3; margin-top:4px;">Investitor • ${new Date(item.pubDate).toLocaleTimeString('sr-ME', {hour:'2-digit', minute:'2-digit'})}</div></div>`).join(''); } } catch(e) {} }
-        function updateClock() { const now = new Date(); document.getElementById('current-time').innerText = now.toLocaleTimeString('sr-ME', { hour: '2-digit', minute: '2-digit' }); document.getElementById('current-date').innerText = now.toLocaleDateString('sr-ME', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); }
-        function rotatePages() { isFxBuyingPage = !isFxBuyingPage; renderFx(); renderStockSlide(); }
-        function autoScale() { const container = document.getElementById('render-surface'); const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080); container.style.transform = `scale(${scale})`; container.style.marginLeft = `-${(1920 * scale) / 2}px`; container.style.marginTop = `-${(1080 * scale) / 2}px`; }
+
+        async function updateStocks() {
+            for (let s of tickers) {
+                try {
+                    const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${s}&token=${FINNHUB_KEY}`);
+                    const d = await res.json();
+                    if (d.c) stockPrices[s] = { p: d.c.toFixed(2), c: d.dp.toFixed(2) };
+                } catch(e){}
+            }
+            renderStockSlide();
+        }
+
+        function renderStockSlide() {
+            const slice = tickers.slice(currentStockSlide * 10, (currentStockSlide * 10) + 10);
+            document.getElementById('stock-list').innerHTML = slice.map(s => {
+                const d = stockPrices[s] || {p: '---', c: '0.00'};
+                setTimeout(() => triggerTextFlash(`stk-${s}`, parseFloat(d.p)), 50);
+                return `<div class="row-item">
+                    <div class="item-info">
+                        <img src="https://financialmodelingprep.com/image-stock/${s}.png" style="width:34px; height:34px; border-radius:6px; margin-right:12px;" onerror="this.src='https://ui-avatars.com/api/?name=${s}&background=34495e&color=fff'">
+                        <div class="sym-container">
+                            <span style="font-size:1.3rem; font-weight:600;">${s}</span><br>
+                            <span style="font-size:0.75rem; opacity:0.4;">${companyNames[s]}</span>
+                        </div>
+                    </div>
+                    <div class="dash-spacer"></div>
+                    <div class="item-values">
+                        <span class="price-now" id="price-stk-${s}">${d.p}</span>
+                        <span class="change-percent" style="color:${parseFloat(d.c)>=0?'var(--up)':'var(--down)'}">${parseFloat(d.c)>=0?'+':''}${d.c}%</span>
+                    </div>
+                </div>`;
+            }).join('');
+            document.getElementById('stock-header').innerText = `NYSE Najaktivnije Akcije (${currentStockSlide + 1}/2)`;
+            currentStockSlide = (currentStockSlide + 1) % 2;
+        }
+
+        async function updateNews() {
+            try {
+                const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Finvestitor.me%2Ffeed%2F`);
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    document.getElementById('news-container').innerHTML = data.items.slice(0, 5).map(item => `
+                        <div class="news-item">
+                            <div class="news-title">${item.title}</div>
+                            <div style="font-size:0.95rem; opacity:0.4; margin-top:8px;">Investitor • ${new Date(item.pubDate).toLocaleTimeString('sr-ME', {hour:'2-digit', minute:'2-digit'})}</div>
+                        </div>
+                    `).join('');
+                }
+            } catch(e) {}
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('current-time').innerText = now.toLocaleTimeString('sr-ME', { hour: '2-digit', minute: '2-digit' });
+            
+            // Lokalizacija datuma na crnogorski
+            const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+            let dateStr = now.toLocaleDateString('sr-ME', options);
+            
+            // Popravka malog slova za dane (standardno u ME)
+            dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+            document.getElementById('current-date').innerText = dateStr;
+        }
+
+        function autoScale() {
+            const container = document.getElementById('render-surface');
+            const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+            container.style.transform = `scale(${scale})`;
+            container.style.marginLeft = `-${(1920 * scale) / 2}px`;
+            container.style.marginTop = `-${(1080 * scale) / 2}px`;
+        }
 
         window.onload = () => {
-            initForex(); updateWeather(); updateFxRates(); updateCrypto(); updateStocks(); updateNews(); updateClock();
-            setInterval(updateClock, 10000); setInterval(rotatePages, 10000); setInterval(updateCrypto, 5000); setInterval(updateFxRates, 60000); setInterval(updateWeather, 900000); setInterval(updateNews, 300000); setInterval(updateStocks, 180000); autoScale();
+            initForex(); updateWeather(); updateCrypto(); updateStocks(); updateNews(); updateClock();
+            setInterval(updateClock, 10000);
+            setInterval(() => { renderFx(); renderStockSlide(); }, 10000);
+            setInterval(updateCrypto, 5000);
+            setInterval(updateWeather, 900000);
+            setInterval(updateNews, 300000);
+            setInterval(updateStocks, 300000);
+            autoScale();
         };
         window.addEventListener('resize', autoScale);
     </script>
