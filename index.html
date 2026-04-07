@@ -28,7 +28,7 @@
             background-color: var(--bg-dark);
             color: var(--text-main); 
             display: flex; flex-direction: column; 
-            padding: 30px 40px 50px 40px; 
+            padding: 25px 40px 30px 40px; 
             transform-origin: 0 0;
             left: 50%; top: 50%;
         }
@@ -42,14 +42,14 @@
         #current-date { font-size: 1.1rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; }
 
         /* --- LAYOUT --- */
-        .main-content { 
-            flex: 1; 
-            display: grid; 
-            grid-template-columns: 530px 450px 1fr; 
-            gap: 25px; 
-            min-height: 0; 
-            padding-bottom: 10px; 
-        }
+      .main-content { 
+    flex: 1; 
+    display: grid; 
+    grid-template-columns: 530px 450px 1fr; 
+    gap: 15px; /* Smanjeno sa 25px */
+    min-height: 0; 
+    padding-bottom: 5px; 
+}
         .left-col, .center-col, .right-col { display: flex; flex-direction: column; gap: 25px; }
         
         .panel { 
@@ -69,10 +69,22 @@
         }
         
         /* --- DASHED LINE --- */
-        .row-item { 
-            display: flex; align-items: center; 
-            padding: 0 20px; height: 72px; border-bottom: 3px solid rgba(255,255,255,0.03); 
-        }
+       .market-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Ravnomjerno raspoređuje redove */
+    min-height: 0;
+}
+
+.row-item { 
+    display: flex; 
+    align-items: center; 
+    padding: 0 20px; 
+    flex: 1; /* Redovi sada zauzimaju sav dostupan prostor */
+    min-height: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03); 
+}
 
         .item-info { display: flex; align-items: center; flex-shrink: 0; }
         
@@ -107,7 +119,12 @@
 
         .news-wrap { flex: 1; padding: 25px 35px; overflow: hidden; display: flex; flex-direction: column; gap: 20px; }
         .news-item { border-left: 4px solid var(--accent); padding-left: 20px; }
-        .news-title { font-size: 1.35rem; line-height: 1.4; font-weight: 400; color: #fff; }
+        ..news-title { 
+    font-size: 1.15rem; /* Smanjeno sa 1.35rem */
+    line-height: 1.3; 
+    font-weight: 400; 
+    color: #fff; 
+}
 
         @keyframes text-flash-green { 0% { color: var(--up); } 100% { color: #eee; } }
         @keyframes text-flash-red { 0% { color: var(--down); } 100% { color: #eee; } }
